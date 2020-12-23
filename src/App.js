@@ -1,24 +1,55 @@
-import logo from './logo.svg';
+import React, { useState, useEffect } from 'react';
 import './App.css';
+import Context from './context';
+import TodoList from './components/TodoList';
+import AddTodo from './components/AddTodo';
 
 function App() {
+
+  const initialState = {
+    todos: localStorage.getItem('todos') ? JSON.parse(localStorage.getItem('todos')) : [],
+  }
+
+  const [todos, setTodos] = useState(initialState.todos);
+
+  useEffect(() => {
+    localStorage.setItem('todos', JSON.stringify(todos));
+  }, [todos]);
+
+  let onToggle = (id) => {
+    setTodos(todos.map((todo) => {
+      if (todo.id === id) {
+        todo.completed = !todo.completed
+      }
+
+      return todo;
+    }))
+  }
+
+  let removeTodo = (id) => {
+    setTodos(todos.filter(item => item.id !== id));
+  }
+
+  function createTodoItem(title) {
+    setTodos(todos.concat([{
+      title,
+      id: Date.now(),
+      completed: false,
+    }]))
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Context.Provider value={{ removeTodo: removeTodo }}>
+      <div className="App">
+        <h1>Todo application</h1>
+        <AddTodo onCreate={createTodoItem} />
+        <ul>
+          {todos.length ? <TodoList todos={todos} onToggle={onToggle} /> : <p>No todos here, add some</p>}
+
+        </ul>
+      </div>
+    </Context.Provider >
+
   );
 }
 
